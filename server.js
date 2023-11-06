@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(
 	cors({
 		origin: [origin],
-		methods: ["GET"],
+		methods: ["PUT"],
 		credentials: true,
 	})
 );
@@ -46,7 +46,7 @@ function jsonResponse(res, status, message) {
 }
 
 //======================= API TO LOGIN =======================\\
-app.get("/v1/api/user/:email&:password", async (req, res) => {
+app.put("/v1/api/user/:email&:password", async (req, res) => {
 	const email = req.params.email.trim().toLowerCase();
 	const password = req.params.password;
 
@@ -72,7 +72,7 @@ app.get("/v1/api/user/:email&:password", async (req, res) => {
 });
 
 //======================= API TO REGISTER NEW USER =======================\\
-app.get("/v1/api/create-user/:name&:email&:password", async (req, res) => {
+app.put("/v1/api/create-user/:name&:email&:password", async (req, res) => {
 	const { name, email, password } = req.params;
 	const formattedName =
 		name.trim().charAt(0).toUpperCase() +
@@ -108,7 +108,7 @@ app.get("/v1/api/create-user/:name&:email&:password", async (req, res) => {
 });
 
 //======================= API TO FORGET PASSWORD =======================\\
-app.get("/v1/api/forgot-password/:email", async (req, res) => {
+app.put("/v1/api/forgot-password/:email", async (req, res) => {
 	const email = req.params.email.trim().toLowerCase();
 	const urlDy = req.query.url;
 
@@ -181,7 +181,7 @@ app.get("/v1/api/forgot-password/:email", async (req, res) => {
 					<h2>Reset Your Forgotten Password</h2>
 					<p>Your password reset link will expire in 10 minutes. You can reset your password within this timeframe.</p>
 					<p>To reset your password, please click the button below:</p>
-					<a href="${urlDy}-&-${userIdToken}" class="button">Reset Password</a>
+					<a href="${urlDy}?${userIdToken}" class="button">Reset Password</a>
 					<p>For your security, <u>kindly do not share this reset link with anyone else</u>.
 					It is unique to your account and should remain confidential.
 					<b>If you did not request this password reset, </b>please ignore this message.</p>
@@ -210,7 +210,7 @@ app.get("/v1/api/forgot-password/:email", async (req, res) => {
 });
 
 //======================= API TO RESET PASSWORD =======================\\
-app.get("/v1/api/reset-password-&-:token", (req, res) => {
+app.put("/v1/api/reset-password-&-:token", (req, res) => {
 	const token = req.params.token;
 	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
 		if (err) {
@@ -238,7 +238,7 @@ app.get("/v1/api/reset-password-&-:token", (req, res) => {
 });
 
 //======================= API TO CHANGE PASSWORD =======================\\
-app.get(
+app.put(
 	"/v1/api/change-password/:password&:conPassword&:token",
 	async (req, res) => {
 		const password = req.params.password;
