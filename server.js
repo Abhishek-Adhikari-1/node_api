@@ -10,7 +10,7 @@ import connectDB from "./database/data.js";
 config({
 	path: "./database/config.env",
 });
-const port = process.env.PORT;
+const port = 3500;
 const serviceExtension = process.env.SERVICE_EXT;
 const mailId = process.env.MAIL_ID;
 const mailPass = process.env.MAIL_PASS;
