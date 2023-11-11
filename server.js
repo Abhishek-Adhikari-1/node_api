@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(
 	cors({
 		origin: [origin],
-		methods: ["PUT"],
+		methods: ["post"],
 		credentials: true,
 	})
 );
@@ -46,9 +46,9 @@ function jsonResponse(res, status, message) {
 }
 
 //======================= API TO LOGIN =======================\\
-app.put("/v1/api/user/:email&:password", async (req, res) => {
-	const email = req.params.email.trim().toLowerCase();
-	const password = req.params.password;
+app.post("/v1/api/user", async (req, res) => {
+	const email = req.body.email;
+	const password = req.body.password;
 
 	if (!email || !password) {
 		return jsonResponse(res, false, "All fields are mandatory");
@@ -72,8 +72,8 @@ app.put("/v1/api/user/:email&:password", async (req, res) => {
 });
 
 //======================= API TO REGISTER NEW USER =======================\\
-app.put("/v1/api/create-user/:name&:email&:password", async (req, res) => {
-	const { name, email, password } = req.params;
+app.post("/v1/api/create-user", async (req, res) => {
+	const { name, email, password } = req.body;
 	const formattedName =
 		name.trim().charAt(0).toUpperCase() +
 		name.trim().slice(1).toLowerCase();
@@ -108,9 +108,9 @@ app.put("/v1/api/create-user/:name&:email&:password", async (req, res) => {
 });
 
 //======================= API TO FORGET PASSWORD =======================\\
-app.put("/v1/api/forgot-password/:email", async (req, res) => {
-	const email = req.params.email.trim().toLowerCase();
-	const urlDy = req.query.url;
+app.post("/v1/api/forgot-password", async (req, res) => {
+	const email = req.body.email.trim().toLowerCase();
+	const urlDy = req.body.url;
 
 	if (!email) {
 		return jsonResponse(res, false, "All fields are mandatory");
@@ -210,8 +210,8 @@ app.put("/v1/api/forgot-password/:email", async (req, res) => {
 });
 
 //======================= API TO RESET PASSWORD =======================\\
-app.put("/v1/api/reset-password-&-:token", (req, res) => {
-	const token = req.params.token;
+app.post("/v1/api/reset-password", (req, res) => {
+	const token = req.body.token;
 	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
 		if (err) {
 			return jsonResponse(res, false, "Invalid or expired token");
@@ -238,64 +238,48 @@ app.put("/v1/api/reset-password-&-:token", (req, res) => {
 });
 
 //======================= API TO CHANGE PASSWORD =======================\\
-app.put(
-	"/v1/api/change-password/:password&:conPassword&:token",
-	async (req, res) => {
-		const password = req.params.password;
-		const conPassword = req.params.conPassword;
-		const token = req.params.token;
-		jwt.verify(
-			token,
-			"jwtsecrettokenisabhishekmine",
-			async (err, decoded) => {
-				if (err) {
-					return jsonResponse(res, false, "Invalid or expired token");
-				}
-				const jwttokenexpires =
-					req.cookies[`__jwttokenexpires_${token}`];
-				if (jwttokenexpires == "true") {
-					return jsonResponse(
-						res,
-						false,
-						"You have already changed your password"
-					);
-				}
-				try {
-					const decodedToken = decoded._id.split("||")[1];
-					const user = await User.findOne({ _id: decodedToken });
-					if (!user) {
-						return jsonResponse(res, false, "User not found");
-					}
-					if (!password || !conPassword) {
-						return jsonResponse(
-							res,
-							false,
-							"All fields are mandatory"
-						);
-					}
-					if (password !== conPassword) {
-						return jsonResponse(
-							res,
-							false,
-							"Passwords must be same"
-						);
-					}
-					user.password = password;
-					await user.save();
-					const expirationTime = new Date();
-					res.cookie(`__jwttokenexpires_${token}`, "true", {
-						httpOnly: true,
-						maxAge: 10 * 60 * 1000,
-					});
-					return jsonResponse(res, true, "Password changed");
-				} catch (error) {
-					console.log(error);
-					return jsonResponse(res, false, "Internal server error");
-				}
+app.post("/v1/api/change-password", async (req, res) => {
+	const password = req.body.password;
+	const conPassword = req.body.conPassword;
+	const token = req.body.token;
+	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
+		if (err) {
+			return jsonResponse(res, false, "Invalid or expired token");
+		}
+		const jwttokenexpires = req.cookies[`__jwttokenexpires_${token}`];
+		if (jwttokenexpires == "true") {
+			return jsonResponse(
+				res,
+				false,
+				"You have already changed your password"
+			);
+		}
+		try {
+			const decodedToken = decoded._id.split("||")[1];
+			const user = await User.findOne({ _id: decodedToken });
+			if (!user) {
+				return jsonResponse(res, false, "User not found");
 			}
-		);
-	}
-);
+			if (!password || !conPassword) {
+				return jsonResponse(res, false, "All fields are mandatory");
+			}
+			if (password !== conPassword) {
+				return jsonResponse(res, false, "Passwords must be same");
+			}
+			user.password = password;
+			await user.save();
+			const expirationTime = new Date();
+			res.cookie(`__jwttokenexpires_${token}`, "true", {
+				httpOnly: true,
+				maxAge: 10 * 60 * 1000,
+			});
+			return jsonResponse(res, true, "Password changed");
+		} catch (error) {
+			console.log(error);
+			return jsonResponse(res, false, "Internal server error");
+		}
+	});
+});
 
 app.listen(port, () => {
 	console.log(`Listening to port ${port}...`);
