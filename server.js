@@ -18,13 +18,7 @@ const origin = process.env.ORIGIN;
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-	cors({
-		origin: [origin],
-		methods: ["post"],
-		credentials: true,
-	})
-);
+app.use(cors());
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", origin);
 	next();
