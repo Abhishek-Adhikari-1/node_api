@@ -47,9 +47,11 @@ function jsonResponse(res, status, message) {
 
 //======================= API TO LOGIN =======================\\
 app.post("/v1/api/user", async (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
 	const email = req.body.email;
 	const password = req.body.password;
-
 	if (!email || !password) {
 		return jsonResponse(res, false, "All fields are mandatory");
 	}
@@ -73,6 +75,9 @@ app.post("/v1/api/user", async (req, res) => {
 
 //======================= API TO REGISTER NEW USER =======================\\
 app.post("/v1/api/create-user", async (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
 	const { name, email, password } = req.body;
 	const formattedName =
 		name.trim().charAt(0).toUpperCase() +
@@ -109,6 +114,9 @@ app.post("/v1/api/create-user", async (req, res) => {
 
 //======================= API TO FORGET PASSWORD =======================\\
 app.post("/v1/api/forgot-password", async (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
 	const email = req.body.email.trim().toLowerCase();
 	const urlDy = req.body.url;
 
@@ -211,6 +219,9 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 
 //======================= API TO RESET PASSWORD =======================\\
 app.post("/v1/api/reset-password", (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
 	const token = req.body.token;
 	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
 		if (err) {
@@ -239,6 +250,9 @@ app.post("/v1/api/reset-password", (req, res) => {
 
 //======================= API TO CHANGE PASSWORD =======================\\
 app.post("/v1/api/change-password", async (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
 	const password = req.body.password;
 	const conPassword = req.body.conPassword;
 	const token = req.body.token;
