@@ -121,21 +121,7 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 	try {
 		const queryUser = await User.findOne({ email });
 		if (queryUser) {
-			const userId =
-				new Date().getHours() +
-				"-" +
-				new Date().getMinutes() +
-				"-" +
-				new Date().getSeconds() +
-				"-" +
-				new Date().getMilliseconds() +
-				"||" +
-				queryUser._id;
-			const userIdToken = jwt.sign(
-				{ _id: userId },
-				"jwtsecrettokenisabhishekmine",
-				{ expiresIn: "10m" }
-			);
+			const code = Math.floor(10000 + Math.random() * 90000);
 			const mailOptions = {
 				from: mailId,
 				to: email,
@@ -180,10 +166,10 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 					</style>
 				</head>
 				<body>
-					<h2>Reset Your Forgotten Password</h2>
-					<p>Your password reset link will expire in 10 minutes. You can reset your password within this timeframe.</p>
-					<p>To reset your password, please click the button below:</p>
-					<a href="${urlDy}?${userIdToken}" class="button">Reset Password</a>
+					<p>The password reset code you requested is:</p>
+					<h2>${code}</h2>
+					<p>To reset your password, please follow the instructions below.</p>
+					<br />
 					<p>For your security, <u>kindly do not share this reset link with anyone else</u>.
 					It is unique to your account and should remain confidential.
 					<b>If you did not request this password reset, </b>please ignore this message.</p>
