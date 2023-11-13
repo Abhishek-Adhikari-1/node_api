@@ -179,9 +179,9 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 			};
 			transporter.sendMail(mailOptions, (error) => {
 				if (error) {
-					queryUser.token = code;
 					return jsonResponse(res, false, error);
 				} else {
+					queryUser.token = code;
 					return jsonResponse(
 						res,
 						true,
