@@ -177,11 +177,12 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 				</html>
 			`,
 			};
-			transporter.sendMail(mailOptions, (error) => {
+			transporter.sendMail(mailOptions, async (error) => {
 				if (error) {
 					return jsonResponse(res, false, error);
 				} else {
 					queryUser.token = code;
+					await queryUser.save();
 					return jsonResponse(
 						res,
 						true,
@@ -210,9 +211,11 @@ app.post("/v1/api/reset-password", async (req, res) => {
 		if (!user) {
 			return jsonResponse(res, false, "User not found");
 		}
-		if (!user.token === token) {
+		if (user.token !== token) {
 			return jsonResponse(res, false, "OTP is invalid or expired");
 		}
+		user.token = null;
+		await user.save();
 		return jsonResponse(res, true, "Token is valid and User exists");
 	} catch (error) {
 		return jsonResponse(res, false, "Internal server error");
