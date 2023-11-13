@@ -214,8 +214,6 @@ app.post("/v1/api/reset-password", async (req, res) => {
 		if (user.token !== token) {
 			return jsonResponse(res, false, "OTP is invalid or expired");
 		}
-		user.token = null;
-		await user.save();
 		return jsonResponse(res, true, "Token is valid and User exists");
 	} catch (error) {
 		return jsonResponse(res, false, "Internal server error");
@@ -230,43 +228,29 @@ app.post("/v1/api/change-password", async (req, res) => {
 	const password = req.body.password;
 	const conPassword = req.body.conPassword;
 	const token = req.body.token;
-	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
-		if (err) {
-			return jsonResponse(res, false, "Invalid or expired token");
+	const email = req.body.email;
+	try {
+		const user = await User.findOne({ email: email });
+		if (!user) {
+			return jsonResponse(res, false, "User not found");
 		}
-		const jwttokenexpires = req.cookies[`__jwttokenexpires_${token}`];
-		if (jwttokenexpires == "true") {
-			return jsonResponse(
-				res,
-				false,
-				"You have already changed your password"
-			);
+		if (!password || !conPassword) {
+			return jsonResponse(res, false, "All fields are mandatory");
 		}
-		try {
-			const decodedToken = decoded._id.split("||")[1];
-			const user = await User.findOne({ _id: decodedToken });
-			if (!user) {
-				return jsonResponse(res, false, "User not found");
-			}
-			if (!password || !conPassword) {
-				return jsonResponse(res, false, "All fields are mandatory");
-			}
-			if (password !== conPassword) {
-				return jsonResponse(res, false, "Passwords must be same");
-			}
-			user.password = password;
-			await user.save();
-			const expirationTime = new Date();
-			res.cookie(`__jwttokenexpires_${token}`, "true", {
-				httpOnly: true,
-				maxAge: 10 * 60 * 1000,
-			});
-			return jsonResponse(res, true, "Password changed");
-		} catch (error) {
-			console.log(error);
-			return jsonResponse(res, false, "Internal server error");
+		if (password !== conPassword) {
+			return jsonResponse(res, false, "Passwords must be same");
 		}
-	});
+		if (user.token !== token) {
+			return jsonResponse(res, false, "OTP is invalid or expired");
+		}
+		user.password = password;
+		user.token = null;
+		await user.save();
+		return jsonResponse(res, true, "Password changed");
+	} catch (error) {
+		console.log(error);
+		return jsonResponse(res, false, "Internal server error");
+	}
 });
 
 app.listen(port, () => {
