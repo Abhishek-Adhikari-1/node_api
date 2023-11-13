@@ -170,7 +170,7 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 					<h2>${code}</h2>
 					<p>To reset your password, please follow the instructions below.</p>
 					<br />
-					<p>For your security, <u>kindly do not share this reset link with anyone else</u>.
+					<p>For your security, <u>kindly do not share this password reset code with anyone else</u>.
 					It is unique to your account and should remain confidential.
 					<b>If you did not request this password reset, </b>please ignore this message.</p>
 				</body>
@@ -179,6 +179,7 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 			};
 			transporter.sendMail(mailOptions, (error) => {
 				if (error) {
+					queryUser.token = code;
 					return jsonResponse(res, false, error);
 				} else {
 					return jsonResponse(
@@ -198,34 +199,24 @@ app.post("/v1/api/forgot-password", async (req, res) => {
 });
 
 //======================= API TO RESET PASSWORD =======================\\
-app.post("/v1/api/reset-password", (req, res) => {
+app.post("/v1/api/reset-password", async (req, res) => {
 	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
 		return jsonResponse(res, false, "Invalid request");
 	}
 	const token = req.body.token;
-	jwt.verify(token, "jwtsecrettokenisabhishekmine", async (err, decoded) => {
-		if (err) {
-			return jsonResponse(res, false, "Invalid or expired token");
+	const email = req.body.email;
+	try {
+		const user = await User.findOne({ email: email });
+		if (!user) {
+			return jsonResponse(res, false, "User not found");
 		}
-		const jwttokenexpires = req.cookies[`__jwttokenexpires_${token}`];
-		if (jwttokenexpires == "true") {
-			return jsonResponse(
-				res,
-				false,
-				"You have already changed your password"
-			);
+		if (!user.token === token) {
+			return jsonResponse(res, false, "OTP is invalid or expired");
 		}
-		try {
-			const decodedToken = decoded._id.split("||")[1];
-			const user = await User.findOne({ _id: decodedToken });
-			if (!user) {
-				return jsonResponse(res, false, "User not found");
-			}
-			return jsonResponse(res, true, "Token is valid and User exists");
-		} catch (error) {
-			return jsonResponse(res, false, "Internal server error");
-		}
-	});
+		return jsonResponse(res, true, "Token is valid and User exists");
+	} catch (error) {
+		return jsonResponse(res, false, "Internal server error");
+	}
 });
 
 //======================= API TO CHANGE PASSWORD =======================\\
