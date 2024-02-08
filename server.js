@@ -1,7 +1,6 @@
 import express from "express";
 import { config } from "dotenv";
 import cors from "cors";
-import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import cookieParser from "cookie-parser";
 import User from "./models/user.js";
@@ -19,6 +18,12 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
+const io = require("socket.io")(app, {
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"],
+	},
+});
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", origin);
 	next();
@@ -251,6 +256,19 @@ app.post("/v1/api/change-password", async (req, res) => {
 		console.log(error);
 		return jsonResponse(res, false, "Internal server error");
 	}
+});
+
+//======================= API TO CHAT =======================\\
+app.post("/v1/api/dashboard", async (req, res) => {
+	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
+		return jsonResponse(res, false, "Invalid request");
+	}
+	const users = {};
+	io.on("connection", (socket) => {
+		socket.on("message", (msg) => {
+			socket.broadcast.emit("message", msg);
+		});
+	});
 });
 
 app.listen(port, () => {
