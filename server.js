@@ -1,6 +1,7 @@
 import express from "express";
 import { config } from "dotenv";
 import cors from "cors";
+import { Server } from "socket.io";
 import nodemailer from "nodemailer";
 import cookieParser from "cookie-parser";
 import User from "./models/user.js";
@@ -18,12 +19,13 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
-const io = require("socket.io")(app, {
+const io = new Server(app, {
 	cors: {
 		origin: "*",
 		methods: ["GET", "POST"],
 	},
 });
+
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", origin);
 	next();
