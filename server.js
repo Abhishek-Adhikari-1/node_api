@@ -22,10 +22,10 @@ app.use(cookieParser());
 app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"],
-    },
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"],
+	},
 });
 
 app.use((req, res, next) => {
@@ -267,7 +267,8 @@ app.post("/v1/api/dashboard", async (req, res) => {
 	if (req.headers.authorization.split(" ")[1] !== process.env.BEARER_KEY) {
 		return jsonResponse(res, false, "Invalid request");
 	}
-	const users = {};
+	console.log(req.body.message);
+	const msg = req.body.message;
 	io.on("connection", (socket) => {
 		socket.on("message", (msg) => {
 			socket.broadcast.emit("message", msg);
